@@ -6,29 +6,21 @@ import numpy as np
 import threading
 import time
 
+y_ruido = []
+y_fix = []
 
-def clean_noise():
+def print_noisy_signal():
     ax.cla()
-
     x = np.arange(0,100,0.1)
     y = np.sin(x/6)
-
     ax.plot(x,y, 'r') 
-    
-    pos_neg = True
-    y_ruido = []
-    i=0
-    while i < len(y):
-        if pos_neg:
-            y_ruido.append(y[i]+0.3)
-            pos_neg = False
-        else:
-            y_ruido.append(y[i]-0.3)
-            pos_neg = True
-        i = i+10
-
     x_ruido = np.arange(0,100,1)
-    ax.plot(x_ruido,y_ruido, 'b')
+    ax.plot(x_ruido, y_ruido, 'b')
+    canvas.draw()
+
+def clean_noise():
+    global y_ruido
+    print_noisy_signal()
     eta = float(eta_gui.get())
     a = float(a_gui.get())
     numX = int(x_gui.get())
@@ -52,43 +44,35 @@ def clean_noise():
             salida_y = np.dot(X,W)*a
             y_fix.append(salida_y)
 
-            #ax.plot(i+numX, salida_y, '.g')
-            #time.sleep(0.3)
+            time.sleep(0.1)
+            ax2.cla()
+            x = np.arange(0,100,0.1)
+            y = np.sin(x/6)
+            ax2.plot(x,y, 'r') 
+            x_fix = np.arange(0, len(y_fix),1)
+            ax2.plot(x_fix, y_fix, 'g')
+            plt.ylim(-2,2) 
+            canvas2.draw()
         except:
             pass
-
-    x_fix = np.arange(0, len(y_fix),1)
     ax.plot(x_fix, y_fix, 'g')
-    plt.ylim(-2,2)
     canvas.draw()
 
 fig, ax= plt.subplots(facecolor='#8D96DA')
+plt.ylim(-2,2) 
+fig2, ax2= plt.subplots(facecolor='#8D96DA')  
+plt.ylim(-2,2)
 
 mainwindow = Tk()
-mainwindow.geometry('1200x600')
+mainwindow.geometry('1200x900')
 mainwindow.config(bg='#8D96DA')
 mainwindow.wm_title('Perceptron')
-#Creamos los valores de los pesos y humbral de activacion 
 
-x = np.arange(0,100,0.1)
-y = np.sin(x/6)
+with open("amplitud.txt") as f:
+    lines = f.readlines()
 
-ax.plot(x,y, 'r') 
-
-pos_neg = True
-y_ruido = []
-i=0
-while i < len(y):
-    if pos_neg:
-        y_ruido.append(y[i]+0.3)
-        pos_neg = False
-    else:
-        y_ruido.append(y[i]-0.3)
-        pos_neg = True
-    i = i+10
-
-x_ruido = np.arange(0,100,1)
-ax.plot(x_ruido,y_ruido, 'b') 
+for line in lines:
+    y_ruido.append(float(line))
 
 eta_gui = StringVar(mainwindow, 0)
 a_gui = StringVar(mainwindow, 0)
@@ -96,7 +80,10 @@ x_gui = StringVar(mainwindow, 0)
 
 #Colocamos la grafica en la interfaz
 canvas = FigureCanvasTkAgg(fig, master = mainwindow)
-canvas.get_tk_widget().place(x=10, y=10, width=1100, height=580)
+canvas.get_tk_widget().place(x=-90, y=-40, width=1200, height=520)
+
+canvas2 = FigureCanvasTkAgg(fig2, master = mainwindow)
+canvas2.get_tk_widget().place(x=-90, y=428, width=1200, height=520)
 
 NumX_label = Label(mainwindow, text = "Numero de X: ", bg='#8D96DA')
 NumX_label.place(x=1050, y=90)
@@ -117,7 +104,9 @@ a_entry = Entry(mainwindow, textvariable=a_gui)
 a_entry.place(x=1050, y=210)
 
 start_button = Button(mainwindow, text="Go!", command=lambda:threading.Thread(target=clean_noise).start())
-start_button.place(x=1050, y=290)
+start_button.place(x=1050, y=250)
+
+print_noisy_signal()
 
 #Mostramos la interfaz
 mainwindow.mainloop()
